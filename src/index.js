@@ -1,4 +1,4 @@
-import init from './init';
+import init from './app.js';
 import 'bootstrap';
 import './style.css';
 
