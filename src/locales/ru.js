@@ -3,12 +3,12 @@ export default {
     languages: {
       ru: 'Русский',
     },
-    validation: {
+    validationMessage: {
       required: 'Не должно быть пустым',
-      correctUrl: 'Ссылка должна быть валидным URL',
+      invalidUrl: 'Ссылка должна быть валидным URL',
       errorServerAnswer: 'Ресурс не содержит валидный RSS',
       correctServerAnswer: 'RSS успешно загружен',
-      rssWasAdded: 'RSS уже существует',
+      rssAdded: 'RSS уже существует',
     },
   },
 };
