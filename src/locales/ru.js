@@ -3,6 +3,9 @@ export default {
     languages: {
       ru: 'Русский',
     },
+    posts: 'Посты',
+    feeds: 'Фиды',
+    buttonText: 'Просмотр',
     validationMessage: {
       required: 'Не должно быть пустым',
       invalidUrl: 'Ссылка должна быть валидным URL',

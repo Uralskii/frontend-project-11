@@ -1,34 +1,113 @@
-// import onChange from 'on-change';
+import onChange from 'on-change';
 
-// export default (elements, state, i18n) => {
-//   const { field, errorField } = elements;
+export default (elements, state, i18n) => {
+  const {
+    form, field, validationField, containerPosts, containerFeeds,
+  } = elements;
 
-//   const renderValidation = (value) => {
-//     switch (value) {
-//       case 'error': errorField.textContent = i18n.t('validation.correctUrl');
-//         break;
-//       default:
-//         break;
-//     }
-//   };
+  const renderContent = () => {
+    containerPosts.innerHTML = '';
+    containerFeeds.innerHTML = '';
 
-//   const handleError = () => {
-//     field.classList.add('is-invalid');
-//     errorField.textContent = i18n.t('validation.correctUrl');
-//   };
+    // Добавляем посты
+    const postSubContainer = document.createElement('div');
+    postSubContainer.classList.add('card', 'border-0');
+    const postTitleContainer = document.createElement('div');
+    postTitleContainer.classList.add('card-body');
 
-//   const watchedState = onChange(state, (path) => {
-//     switch (path) {
-//       case 'form.status': renderValidation(value);
-//         break;
+    const titlePostTextElem = document.createElement('h2');
+    titlePostTextElem.classList.add('card-title', 'h4');
+    titlePostTextElem.textContent = i18n.t('posts');
+    postTitleContainer.append(titlePostTextElem);
 
-//       case 'form.errors': handleError();
-//         break;
+    const postList = document.createElement('ul');
+    postList.classList.add('list-group', 'border-0', 'rounded-0');
+    postSubContainer.append(postTitleContainer, postList);
+    containerPosts.append(postSubContainer);
 
-//       default:
-//         break;
-//     }
-//   });
+    // eslint-disable-next-line array-callback-return
+    state.posts.map((post) => {
+      const li = document.createElement('li');
+      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      const link = document.createElement('a');
+      link.classList.add('fw-bold');
+      link.setAttribute('href', `${post.link}`);
+      link.textContent = post.name;
 
-//   return watchedState;
-// };
+      const button = document.createElement('button');
+      button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-bs-toogle', 'modal');
+      button.setAttribute('data-bs-target', '#modal');
+      button.textContent = i18n.t('buttonText');
+
+      li.append(link, button);
+
+      postList.append(li);
+    });
+
+    // Добавляем фиды
+    const feedsSubContainer = document.createElement('div');
+    feedsSubContainer.classList.add('card', 'border-0');
+    const titleFeedsContainer = document.createElement('div');
+    titleFeedsContainer.classList.add('card-body');
+
+    const titleFeedsTextElement = document.createElement('h2');
+    titleFeedsTextElement.classList.add('card-title', 'h4');
+    titleFeedsTextElement.textContent = i18n.t('feeds');
+    titleFeedsContainer.append(titleFeedsTextElement);
+
+    const feedList = document.createElement('ul');
+    feedList.classList.add('list-group', 'border-0', 'rounded-0');
+    feedsSubContainer.append(titleFeedsTextElement, feedList);
+    containerFeeds.append(feedsSubContainer);
+
+    // eslint-disable-next-line array-callback-return
+    state.feeds.map((feed) => {
+      const li = document.createElement('li');
+      li.classList.add('list-group-item', 'border-0', 'border-end-0');
+      const titleEl = document.createElement('h3');
+      titleEl.classList.add('h6', 'm-0');
+      titleEl.textContent = feed.name;
+
+      const textEl = document.createElement('p');
+      textEl.classList.add('m-0', 'small', 'text-black-50');
+      textEl.textContent = feed.desc;
+
+      li.append(titleEl, textEl);
+
+      feedList.append(li);
+    });
+
+    validationField.textContent = i18n.t(state.form.validationMessage);
+    validationField.classList.remove('text-danger');
+    validationField.classList.add('text-success');
+
+    form.reset();
+    field.focus();
+  };
+
+  const handleValidation = (value) => {
+    switch (value) {
+      case 'loaded': renderContent();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const watchedState = onChange(state, (path, value) => {
+    switch (path) {
+      case 'form.status': handleValidation(value);
+        break;
+
+        // case 'form.errors': handleError();
+        //   break;
+
+      default:
+        break;
+    }
+  });
+
+  return watchedState;
+};
