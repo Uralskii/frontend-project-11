@@ -2,7 +2,7 @@ import onChange from 'on-change';
 
 export default (elements, state, i18n) => {
   const {
-    form, field, validationField, containerPosts, containerFeeds,
+    form, formField, validationElement, containerPosts, containerFeeds,
   } = elements;
 
   const renderContent = () => {
@@ -32,6 +32,7 @@ export default (elements, state, i18n) => {
       const link = document.createElement('a');
       link.classList.add('fw-bold');
       link.setAttribute('href', `${post.link}`);
+      link.setAttribute('target', '_blank');
       link.textContent = post.name;
 
       const button = document.createElement('button');
@@ -79,18 +80,35 @@ export default (elements, state, i18n) => {
       feedList.append(li);
     });
 
-    validationField.textContent = i18n.t(state.form.validationMessage);
-    validationField.classList.remove('text-danger');
-    validationField.classList.add('text-success');
+    validationElement.textContent = i18n.t(state.form.validationMessage);
+    validationElement.classList.remove('text-danger');
+    validationElement.classList.add('text-success');
 
     form.reset();
-    field.focus();
+    formField.focus();
+  };
+
+  // const renderModalWindow = () => {
+  //   body.classList.add('modal-open');
+  //   body.style.overflow = 'hidden';
+  //   modalWindow.classList.add('show');
+  //   modalWindow.style.display = 'block';
+  // };
+
+  const handleRenderError = () => {
+    formField.classList.add('is-invalid');
+    validationElement.textContent = state.form.validationMessage;
+    validationElement.classList.add('text-danger');
   };
 
   const handleValidation = (value) => {
     switch (value) {
       case 'loaded': renderContent();
         break;
+
+      case 'validationError': handleRenderError();
+        break;
+
       default:
         break;
     }
@@ -101,7 +119,7 @@ export default (elements, state, i18n) => {
       case 'form.status': handleValidation(value);
         break;
 
-        // case 'form.errors': handleError();
+        // case 'postProcessVisit.status': renderModalWindow();
         //   break;
 
       default:
