@@ -1,8 +1,9 @@
 import * as yup from 'yup';
 import i18next from 'i18next';
-// import axios from 'axios';
+import axios from 'axios';
 import view from './view.js';
 import resources from './locales/index';
+import parser from './parser.js';
 
 export default () => {
   const elements = {
@@ -23,12 +24,9 @@ export default () => {
       valid: true,
       validationMessage: '',
     },
-    // postProcessVisit: {
-    //   status: null,
-    // },
     rssList: [],
-    postsList: [],
-    feedsList: [],
+    feeds: [],
+    posts: [],
   };
 
   const i18n = i18next.createInstance();
@@ -74,6 +72,52 @@ export default () => {
         watchedState.form.validationMessage = err.message;
         watchedState.form.status = 'validationError';
       });
+
+    // Вот здесь должна быть связка или условие, чтобы не выполнялся запрос,
+    // в случае отрицательной валидации?
+    // Например, если введенная ссылка - дубль.
+
+    // Или я вообще неверно строю логику работы?
+
+    axios.get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
+      .then((response) => {
+        watchedState.form.status = 'loading';
+        const rssContent = response.data.contents;
+
+        const html = parser(rssContent);
+
+        const titleFeed = html.querySelector('title');
+        const descrFeed = html.querySelector('description');
+
+        const feed = {
+          name: titleFeed.textContent.trim(),
+          desc: descrFeed.textContent.trim(),
+        };
+        watchedState.feeds.push(feed);
+
+        const items = Array.from(html.querySelectorAll('item'));
+        // eslint-disable-next-line array-callback-return
+        items.map((item) => {
+          const title = item.querySelector('title');
+          const link = item.querySelector('link');
+          const description = item.querySelector('description');
+
+          const post = {
+            name: title.textContent.trim(),
+            link: link.nextSibling.data.trim(),
+            desc: description.textContent.trim(),
+          };
+          watchedState.posts.push(post);
+        });
+
+        watchedState.form.validationMessage = 'validationMessage.correctServerAnswer';
+      })
+      .then(() => {
+        watchedState.form.status = 'loaded';
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 
   // elements.containerPosts.addEventListener('click', (e) => {
@@ -84,43 +128,3 @@ export default () => {
   //   }
   // });
 };
-
-// axios.get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
-//   .then((response) => {
-//     watchedState.form.status = 'loading';
-
-//     const rssContent = response.data.contents;
-//     const parser = new DOMParser();
-//     const doc = parser.parseFromString(rssContent, 'text/html');
-//     const titleFeed = doc.querySelector('title');
-//     const descrFeed = doc.querySelector('description');
-
-//     const feed = {
-//       name: titleFeed.textContent,
-//       desc: descrFeed.textContent.trim(),
-//     };
-
-//     watchedState.feeds.push(feed);
-//     watchedState.form.validationMessage = 'validationMessage.correctServerAnswer';
-
-//     const items = Array.from(doc.querySelectorAll('item'));
-//     // eslint-disable-next-line array-callback-return
-//     items.map((item) => {
-//       const title = item.querySelector('title');
-//       const link = item.querySelector('link');
-//       const description = item.querySelector('description');
-
-//       const post = {
-//         name: title.textContent.trim(),
-//         link: link.nextSibling.data.trim(),
-//         desc: description.textContent.trim(),
-//       };
-//       watchedState.posts.push(post);
-//     });
-//   })
-//   .then(() => {
-//     watchedState.form.status = 'loaded';
-//   })
-//   .catch((err) => {
-//     console.log(err);
-//   });
