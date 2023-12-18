@@ -11,6 +11,7 @@ export default () => {
     form: document.querySelector('.rss-form'),
     formField: document.querySelector('#url-input'),
     validationElement: document.querySelector('.feedback'),
+    submitButton: document.querySelector('button'),
     containerPosts: document.querySelector('.posts'),
     containerFeeds: document.querySelector('.feeds'),
     containerModalWindow: document.querySelector('.modal'),
@@ -23,6 +24,9 @@ export default () => {
       status: null,
       valid: true,
       validationMessage: '',
+    },
+    processUpdatePosts: {
+      status: 'filling',
     },
     rssList: [],
     feeds: [],
@@ -54,6 +58,22 @@ export default () => {
     return schema.validate(formatLink, { abortEarly: false });
   };
 
+  const updatePost = (links) => {
+    const promise = links.map((link) => {
+      const getData = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(link)}`);
+
+      return getData;
+    });
+
+    Promise.all(promise)
+      .then((res) => {
+        console.log(res);
+      })
+      .finally(() => {
+        setTimeout(() => updatePost(links), 5000);
+      });
+  };
+
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     watchedState.form.status = 'filling';
@@ -67,58 +87,39 @@ export default () => {
         watchedState.form.validationMessage = '';
         watchedState.rssList.push(url);
       })
+      .then(() => {
+        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+          .then((response) => {
+            console.log(response);
+            const rssContent = response.data.contents;
+
+            if (!rssContent.startsWith('<?xml')) {
+              watchedState.form.validationMessage = i18n.t('validationMessage.errorServerAnswer');
+              watchedState.form.status = 'invalidRss';
+              return;
+            }
+
+            watchedState.form.status = 'loading';
+            parser(rssContent, watchedState);
+          })
+          .then(() => {
+            watchedState.form.validationMessage = 'validationMessage.correctServerAnswer';
+            watchedState.form.status = 'loaded';
+          })
+          .catch(() => {
+            watchedState.form.validationMessage = i18n.t('validationMessage.networkError');
+            watchedState.form.status = 'networkError';
+          });
+      })
       .catch((err) => {
         watchedState.form.valid = false;
         watchedState.form.validationMessage = err.message;
         watchedState.form.status = 'validationError';
       });
-
-    // Вот здесь должна быть связка или условие, чтобы не выполнялся запрос,
-    // в случае отрицательной валидации?
-    // Например, если введенная ссылка - дубль.
-
-    // Или я вообще неверно строю логику работы?
-
-    axios.get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
-      .then((response) => {
-        watchedState.form.status = 'loading';
-        const rssContent = response.data.contents;
-
-        const html = parser(rssContent);
-
-        const titleFeed = html.querySelector('title');
-        const descrFeed = html.querySelector('description');
-
-        const feed = {
-          name: titleFeed.textContent.trim(),
-          desc: descrFeed.textContent.trim(),
-        };
-        watchedState.feeds.push(feed);
-
-        const items = Array.from(html.querySelectorAll('item'));
-        // eslint-disable-next-line array-callback-return
-        items.map((item) => {
-          const title = item.querySelector('title');
-          const link = item.querySelector('link');
-          const description = item.querySelector('description');
-
-          const post = {
-            name: title.textContent.trim(),
-            link: link.nextSibling.data.trim(),
-            desc: description.textContent.trim(),
-          };
-          watchedState.posts.push(post);
-        });
-
-        watchedState.form.validationMessage = 'validationMessage.correctServerAnswer';
-      })
-      .then(() => {
-        watchedState.form.status = 'loaded';
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    console.log(watchedState);
   });
+
+  updatePost(watchedState.rssList);
 
   // elements.containerPosts.addEventListener('click', (e) => {
   //   const element = e.target;

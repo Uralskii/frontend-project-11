@@ -12,6 +12,7 @@ export default {
       errorServerAnswer: 'Ресурс не содержит валидный RSS',
       correctServerAnswer: 'RSS успешно загружен',
       rssAdded: 'RSS уже существует',
+      networkError: 'Ошибка сети',
     },
   },
 };

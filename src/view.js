@@ -2,7 +2,7 @@ import onChange from 'on-change';
 
 export default (elements, state, i18n) => {
   const {
-    form, formField, validationElement, containerPosts, containerFeeds,
+    form, formField, validationElement, submitButton, containerPosts, containerFeeds,
   } = elements;
 
   const renderContent = () => {
@@ -33,6 +33,7 @@ export default (elements, state, i18n) => {
       link.classList.add('fw-bold');
       link.setAttribute('href', `${post.link}`);
       link.setAttribute('target', '_blank');
+      link.setAttribute('data-id', post.postId);
       link.textContent = post.name;
 
       const button = document.createElement('button');
@@ -40,6 +41,7 @@ export default (elements, state, i18n) => {
       button.setAttribute('type', 'button');
       button.setAttribute('data-bs-toogle', 'modal');
       button.setAttribute('data-bs-target', '#modal');
+      button.setAttribute('data-id', post.postId);
       button.textContent = i18n.t('buttonText');
 
       li.append(link, button);
@@ -84,6 +86,8 @@ export default (elements, state, i18n) => {
     validationElement.classList.remove('text-danger');
     validationElement.classList.add('text-success');
 
+    formField.classList.remove('is-invalid');
+
     form.reset();
     formField.focus();
   };
@@ -102,11 +106,21 @@ export default (elements, state, i18n) => {
   };
 
   const handleValidation = (value) => {
+    console.log(value);
     switch (value) {
       case 'loaded': renderContent();
         break;
 
       case 'validationError': handleRenderError();
+        break;
+
+      case 'loading': submitButton.disabled = true;
+        break;
+
+      case 'invalidRss': handleRenderError();
+        break;
+
+      case 'networkError': handleRenderError();
         break;
 
       default:
