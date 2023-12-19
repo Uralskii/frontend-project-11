@@ -96,6 +96,7 @@ export default (elements, state, i18n) => {
   const renderModalWindow = () => {
     body.classList.add('modal-open');
     body.style.overflow = 'hidden';
+    body.style.padding = '0 17px 0 0';
     containerModalWindow.classList.add('show');
     containerModalWindow.style.display = 'block';
 
