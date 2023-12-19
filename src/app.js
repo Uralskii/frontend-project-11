@@ -15,6 +15,10 @@ export default () => {
     containerPosts: document.querySelector('.posts'),
     containerFeeds: document.querySelector('.feeds'),
     containerModalWindow: document.querySelector('.modal'),
+    modalTitle: document.querySelector('.modal-title'),
+    modalBody: document.querySelector('.modal-body'),
+    modalLink: document.querySelector('.modal-link'),
+    modalButton: document.querySelector('.btn-modal'),
   };
 
   const defaultLang = 'ru';
@@ -28,9 +32,11 @@ export default () => {
     processUpdatePosts: {
       status: 'filling',
     },
+    modalWindowOpen: false,
     rssList: [],
     feeds: [],
     posts: [],
+    touchedPost: {},
   };
 
   const i18n = i18next.createInstance();
@@ -89,14 +95,14 @@ export default () => {
       })
       .then(() => {
         axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+          // eslint-disable-next-line consistent-return
           .then((response) => {
-            console.log(response);
             const rssContent = response.data.contents;
 
             if (!rssContent.startsWith('<?xml')) {
               watchedState.form.validationMessage = i18n.t('validationMessage.errorServerAnswer');
               watchedState.form.status = 'invalidRss';
-              return;
+              return Promise.reject();
             }
 
             watchedState.form.status = 'loading';
@@ -116,16 +122,25 @@ export default () => {
         watchedState.form.validationMessage = err.message;
         watchedState.form.status = 'validationError';
       });
-    console.log(watchedState);
   });
 
   updatePost(watchedState.rssList);
 
-  // elements.containerPosts.addEventListener('click', (e) => {
-  //   const element = e.target;
+  elements.containerPosts.addEventListener('click', ({ target }) => {
+    const element = target;
+    const idElement = element.dataset.id;
 
-  //   if (element.type === 'button') {
-  //     watchedState.postProcessVisit.status = 'watch';
-  //   }
-  // });
+    const touchedElement = watchedState.posts.filter((post) => post.postId === idElement);
+    const [post] = touchedElement;
+
+    watchedState.touchedPost = post;
+
+    if (element.type === 'button') {
+      watchedState.modalWindowOpen = true;
+    }
+  });
+
+  elements.modalButton.addEventListener('click', () => {
+    watchedState.modalWindowOpen = false;
+  });
 };

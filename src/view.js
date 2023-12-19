@@ -2,7 +2,8 @@ import onChange from 'on-change';
 
 export default (elements, state, i18n) => {
   const {
-    form, formField, validationElement, submitButton, containerPosts, containerFeeds,
+    body, form, formField, validationElement, submitButton, containerPosts,
+    containerFeeds, containerModalWindow, modalTitle, modalBody, modalLink,
   } = elements;
 
   const renderContent = () => {
@@ -92,12 +93,30 @@ export default (elements, state, i18n) => {
     formField.focus();
   };
 
-  // const renderModalWindow = () => {
-  //   body.classList.add('modal-open');
-  //   body.style.overflow = 'hidden';
-  //   modalWindow.classList.add('show');
-  //   modalWindow.style.display = 'block';
-  // };
+  const renderModalWindow = () => {
+    body.classList.add('modal-open');
+    body.style.overflow = 'hidden';
+    containerModalWindow.classList.add('show');
+    containerModalWindow.style.display = 'block';
+
+    modalTitle.textContent = state.touchedPost.name;
+    modalBody.textContent = state.touchedPost.desc;
+    modalLink.setAttribute('href', `${state.touchedPost.link}`);
+
+    const backDropElement = document.createElement('div');
+    backDropElement.classList.add('modal-backdrop', 'fade', 'show');
+    body.append(backDropElement);
+  };
+
+  const renderCloseModalWindow = () => {
+    body.classList.remove('modal-open');
+    body.style = 'none';
+    containerModalWindow.classList.remove('show');
+    containerModalWindow.style.display = 'none';
+
+    const backDropElement = document.querySelector('.modal-backdrop');
+    backDropElement.remove();
+  };
 
   const handleRenderError = () => {
     formField.classList.add('is-invalid');
@@ -105,8 +124,26 @@ export default (elements, state, i18n) => {
     validationElement.classList.add('text-danger');
   };
 
+  const touchedPost = () => {
+    const element = document.querySelector(`[data-id="${state.touchedPost.postId}"]`);
+    element.classList.remove('fw-bold');
+    element.classList.add('fw-normal');
+  };
+
+  const handleModalWindow = (value) => {
+    switch (value) {
+      case true: renderModalWindow();
+        break;
+
+      case false: renderCloseModalWindow();
+        break;
+
+      default:
+        break;
+    }
+  };
+
   const handleValidation = (value) => {
-    console.log(value);
     switch (value) {
       case 'loaded': renderContent();
         break;
@@ -133,8 +170,11 @@ export default (elements, state, i18n) => {
       case 'form.status': handleValidation(value);
         break;
 
-        // case 'postProcessVisit.status': renderModalWindow();
-        //   break;
+      case 'touchedPosts': touchedPost();
+        break;
+
+      case 'modalWindowOpen': handleModalWindow(value);
+        break;
 
       default:
         break;
