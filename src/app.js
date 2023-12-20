@@ -1,9 +1,9 @@
 import * as yup from 'yup';
 import i18next from 'i18next';
-import axios from 'axios';
 import view from './view.js';
 import resources from './locales/index';
-import parser from './parser.js';
+import updatePosts from './utils/updatePosts.js';
+import getRssData from './utils/getRssData.js';
 
 export default () => {
   const elements = {
@@ -30,7 +30,7 @@ export default () => {
       validationMessage: '',
     },
     processUpdatePosts: {
-      status: 'filling',
+      status: null,
     },
     modalWindowOpen: false,
     rssList: [],
@@ -59,25 +59,7 @@ export default () => {
 
   const validation = (link, rssList) => {
     const schema = yup.string().url().required().notOneOf(rssList, i18n.t('validationMessage.rssAdded'));
-    const formatLink = link.trim();
-
-    return schema.validate(formatLink, { abortEarly: false });
-  };
-
-  const updatePost = (links) => {
-    const promise = links.map((link) => {
-      const getData = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(link)}`);
-
-      return getData;
-    });
-
-    Promise.all(promise)
-      .then((res) => {
-        console.log(res);
-      })
-      .finally(() => {
-        setTimeout(() => updatePost(links), 5000);
-      });
+    return schema.validate(link, { abortEarly: false });
   };
 
   elements.form.addEventListener('submit', (e) => {
@@ -94,28 +76,7 @@ export default () => {
         watchedState.rssList.push(url);
       })
       .then(() => {
-        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
-          // eslint-disable-next-line consistent-return
-          .then((response) => {
-            const rssContent = response.data.contents;
-
-            if (!rssContent.startsWith('<?xml')) {
-              watchedState.form.validationMessage = i18n.t('validationMessage.errorServerAnswer');
-              watchedState.form.status = 'invalidRss';
-              return Promise.reject();
-            }
-
-            watchedState.form.status = 'loading';
-            parser(rssContent, watchedState);
-          })
-          .then(() => {
-            watchedState.form.validationMessage = 'validationMessage.correctServerAnswer';
-            watchedState.form.status = 'loaded';
-          })
-          .catch(() => {
-            watchedState.form.validationMessage = i18n.t('validationMessage.networkError');
-            watchedState.form.status = 'networkError';
-          });
+        getRssData(url, watchedState, i18n);
       })
       .catch((err) => {
         watchedState.form.valid = false;
@@ -124,7 +85,7 @@ export default () => {
       });
   });
 
-  updatePost(watchedState.rssList);
+  updatePosts(watchedState.rssList, watchedState.posts, watchedState);
 
   elements.containerPosts.addEventListener('click', ({ target }) => {
     const element = target;

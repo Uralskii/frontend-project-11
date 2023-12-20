@@ -127,8 +127,52 @@ export default (elements, state, i18n) => {
 
   const touchedPost = () => {
     const element = document.querySelector(`[data-id="${state.touchedPost.postId}"]`);
+    console.log(element);
     element.classList.remove('fw-bold');
     element.classList.add('fw-normal');
+  };
+
+  const renderPosts = () => {
+    containerPosts.innerHTML = '';
+
+    const postSubContainer = document.createElement('div');
+    postSubContainer.classList.add('card', 'border-0');
+    const postTitleContainer = document.createElement('div');
+    postTitleContainer.classList.add('card-body');
+
+    const titlePostTextElem = document.createElement('h2');
+    titlePostTextElem.classList.add('card-title', 'h4');
+    titlePostTextElem.textContent = i18n.t('posts');
+    postTitleContainer.append(titlePostTextElem);
+
+    const postList = document.createElement('ul');
+    postList.classList.add('list-group', 'border-0', 'rounded-0');
+    postSubContainer.append(postTitleContainer, postList);
+    containerPosts.append(postSubContainer);
+
+    // eslint-disable-next-line array-callback-return
+    state.posts.map((post) => {
+      const li = document.createElement('li');
+      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      const link = document.createElement('a');
+      link.classList.add('fw-bold');
+      link.setAttribute('href', `${post.link}`);
+      link.setAttribute('target', '_blank');
+      link.setAttribute('data-id', post.postId);
+      link.textContent = post.name;
+
+      const button = document.createElement('button');
+      button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-bs-toogle', 'modal');
+      button.setAttribute('data-bs-target', '#modal');
+      button.setAttribute('data-id', post.postId);
+      button.textContent = i18n.t('buttonText');
+
+      li.append(link, button);
+
+      postList.append(li);
+    });
   };
 
   const handleModalWindow = (value) => {
@@ -166,15 +210,28 @@ export default (elements, state, i18n) => {
     }
   };
 
+  const handleUpdatePosts = (value) => {
+    switch (value) {
+      case 'newpost': renderPosts();
+        break;
+
+      default:
+        break;
+    }
+  };
+
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'form.status': handleValidation(value);
         break;
 
-      case 'touchedPosts': touchedPost();
+      case 'touchedPost': touchedPost();
         break;
 
       case 'modalWindowOpen': handleModalWindow(value);
+        break;
+
+      case 'processUpdatePosts.status': handleUpdatePosts(value);
         break;
 
       default:

@@ -27,7 +27,6 @@ export default (content, state) => {
       desc: description.textContent.trim(),
       postId: uniqueId(),
       postFeedId: feed.feedId,
-      status: 'untouched',
     };
     state.posts.push(post);
   });
